@@ -1,35 +1,32 @@
-const apiKey = "e3d4724a0916f137af03830dd340ded3";
+const apiKey = 'e3d4724a0916f137af03830dd340ded3'; // your key
 
-document.getElementById("weatherForm").addEventListener("submit", function (e) {
-    e.preventDefault();
+    async function getWeather() {
+      const city = document.getElementById('cityInput').value.trim();
+      const resultDiv = document.getElementById('weatherResult');
 
-    const city = document.getElementById("cityInput").value;
-    const weatherResult = document.getElementById("weatherResult");
-
-    if (!city) {
-        weatherResult.innerHTML = "<p>Please enter a city name.</p>";
+      if (!city) {
+        resultDiv.innerHTML = 'Please enter a city name.';
         return;
+      }
+
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.cod !== 200) {
+          resultDiv.innerHTML = `❌ ${data.message}`;
+          return;
+        }
+
+        const { name, sys, main, weather } = data;
+
+        resultDiv.innerHTML = `
+          <div class="temp">${main.temp}°C</div>
+          <div>${weather[0].description}</div>
+          <div>${name}, ${sys.country}</div>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = '⚠️ Error fetching weather data.';
+      }
     }
-
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("City not found or API error.");
-            }
-            return response.json();
-        })
-        .then(data => {
-            const temp = data.main.temp;
-            const description = data.weather[0].description;
-            const icon = data.weather[0].icon;
-
-            weatherResult.innerHTML = `
-                <h2>Weather in ${data.name}</h2>
-                <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${description}">
-                <p><strong>${temp}°C</strong> - ${description}</p>
-            `;
-        })
-        .catch(error => {
-            weatherResult.innerHTML = `<p>Error: ${error.message}</p>`;
-        });
-});
